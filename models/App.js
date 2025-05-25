@@ -15,6 +15,27 @@ const elementSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
+  // Add conditional rendering support
+  renderType: {
+    type: String,
+    enum: ['fixed', 'conditional'],
+    default: 'fixed'
+  },
+  conditions: [{
+    id: String,
+    steps: [{
+      id: String,
+      type: {
+        type: String,
+        default: 'operation'
+      },
+      operation: String,
+      config: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
+      }
+    }]
+  }],
   children: [{
     type: mongoose.Schema.Types.Mixed // Nested elements
   }]
