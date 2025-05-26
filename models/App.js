@@ -36,6 +36,29 @@ const elementSchema = new mongoose.Schema({
       }
     }]
   }],
+  // ADD MISSING FIELDS FOR REPEATING CONTAINERS
+  contentType: {
+    type: String,
+    enum: ['fixed', 'repeating'],
+    default: 'fixed'
+  },
+  repeatingConfig: {
+    databaseId: {
+      type: String,
+      default: null
+    },
+    tableId: {
+      type: String,
+      default: null
+    },
+    filters: [{
+      id: String,
+      column: String,
+      operator: String,
+      value: String,
+      logic: String
+    }]
+  },
   children: [{
     type: mongoose.Schema.Types.Mixed // Nested elements
   }]
