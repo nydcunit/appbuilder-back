@@ -23,6 +23,10 @@ const elementSchema = new mongoose.Schema({
   },
   conditions: [{
     id: String,
+    properties: {  // FIXED: Added properties field for condition-specific styling
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
     steps: [{
       id: String,
       type: {
