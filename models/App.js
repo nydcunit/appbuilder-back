@@ -63,6 +63,30 @@ const elementSchema = new mongoose.Schema({
       logic: String
     }]
   },
+  // ADD CONTAINER TYPE AND SLIDER CONFIG FIELDS
+  containerType: {
+    type: String,
+    enum: ['basic', 'slider', 'tabs'],
+    default: 'basic'
+  },
+  sliderConfig: {
+    autoPlay: {
+      type: Boolean,
+      default: false
+    },
+    loop: {
+      type: Boolean,
+      default: false
+    },
+    slidesToScroll: {
+      type: Number,
+      default: 1
+    },
+    activeTab: {
+      type: String,
+      default: '1'
+    }
+  },
   children: [{
     type: mongoose.Schema.Types.Mixed // Nested elements
   }]
