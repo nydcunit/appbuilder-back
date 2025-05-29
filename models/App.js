@@ -140,6 +140,22 @@ const appSchema = new mongoose.Schema({
     maxlength: [500, 'Description cannot be more than 500 characters'],
     default: ''
   },
+  appType: {
+    type: String,
+    enum: ['web', 'mobile'],
+    default: 'web'
+  },
+  subdomain: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    sparse: true, // Only unique if not null
+    match: [/^[a-z0-9-]+$/, 'Subdomain can only contain lowercase letters, numbers, and hyphens']
+  },
+  icon: {
+    type: String, // Will store the file path or URL
+    default: null
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -192,6 +208,7 @@ const appSchema = new mongoose.Schema({
 // Index for better query performance
 appSchema.index({ owner: 1, createdAt: -1 });
 appSchema.index({ slug: 1 });
+appSchema.index({ subdomain: 1 });
 appSchema.index({ isPublic: 1, isPublished: 1 });
 
 // Generate slug before saving if published

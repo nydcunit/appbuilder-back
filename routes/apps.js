@@ -103,7 +103,19 @@ router.post('/', [
     .optional()
     .trim()
     .isLength({ max: 500 })
-    .withMessage('Description cannot be more than 500 characters')
+    .withMessage('Description cannot be more than 500 characters'),
+  body('appType')
+    .optional()
+    .isIn(['web', 'mobile'])
+    .withMessage('App type must be either web or mobile'),
+  body('subdomain')
+    .optional()
+    .trim()
+    .toLowerCase()
+    .matches(/^[a-z0-9-]+$/)
+    .withMessage('Subdomain can only contain lowercase letters, numbers, and hyphens')
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Subdomain must be between 3 and 50 characters')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -116,7 +128,7 @@ router.post('/', [
       });
     }
 
-    const { name, description } = req.body;
+    const { name, description, appType, subdomain } = req.body;
 
     // Check if user already has an app with this name
     const existingApp = await App.findOne({
@@ -131,13 +143,30 @@ router.post('/', [
       });
     }
 
+    // Check subdomain uniqueness if provided
+    if (subdomain) {
+      const existingSubdomain = await App.findOne({ subdomain });
+      if (existingSubdomain) {
+        return res.status(400).json({
+          success: false,
+          message: 'This subdomain is already taken'
+        });
+      }
+    }
+
     // Create app with default screen
-    const app = await App.create({
+    const appData = {
       name,
       description: description || '',
       owner: req.user.id,
       screens: [{ id: 1, name: 'Home', elements: [] }]
-    });
+    };
+
+    // Add optional fields if provided
+    if (appType) appData.appType = appType;
+    if (subdomain && appType === 'web') appData.subdomain = subdomain;
+
+    const app = await App.create(appData);
 
     res.status(201).json({
       success: true,
