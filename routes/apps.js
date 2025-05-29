@@ -164,7 +164,7 @@ router.post('/', [
 
     // Add optional fields if provided
     if (appType) appData.appType = appType;
-    if (subdomain && appType === 'web') appData.subdomain = subdomain;
+    if (subdomain) appData.subdomain = subdomain;
 
     const app = await App.create(appData);
 
