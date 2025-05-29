@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const http = require('http');
+const { Server } = require('socket.io');
 
 // Load environment variables
 dotenv.config();
@@ -110,11 +112,50 @@ app.use('*', (req, res) => {
   });
 });
 
+// Create HTTP server and Socket.IO instance
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000", /^http:\/\/.*\.localhost:3000$/],
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log(`🔌 Client connected: ${socket.id}`);
+
+  // Handle joining app-specific rooms
+  socket.on('join-app', (appId) => {
+    socket.join(`app-${appId}`);
+    console.log(`📱 Socket ${socket.id} joined app-${appId}`);
+  });
+
+  // Handle leaving app rooms
+  socket.on('leave-app', (appId) => {
+    socket.leave(`app-${appId}`);
+    console.log(`📱 Socket ${socket.id} left app-${appId}`);
+  });
+
+  // Handle app save events from builder
+  socket.on('app-saved', (appId) => {
+    console.log(`💾 App ${appId} saved, broadcasting to preview windows`);
+    // Broadcast to all preview windows for this app
+    socket.to(`app-${appId}`).emit('app-updated', { appId, timestamp: Date.now() });
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log(`🔌 Client disconnected: ${socket.id}`);
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📚 API docs: http://localhost:${PORT}/api`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔌 Socket.IO server ready`);
 });

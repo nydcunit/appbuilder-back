@@ -6,12 +6,50 @@ const { auth } = require('../middleware/auth');
 const router = express.Router();
 
 // @route   GET /api/apps
-// @desc    Get all apps for authenticated user
-// @access  Private
-router.get('/', auth, async (req, res) => {
+// @desc    Get all apps for authenticated user or find by subdomain
+// @access  Private (except for subdomain lookup)
+router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '', subdomain } = req.query;
     const skip = (page - 1) * limit;
+
+    // If subdomain is provided, find app by subdomain (public access)
+    if (subdomain) {
+      const app = await App.findOne({ subdomain });
+      if (!app) {
+        return res.status(404).json({
+          success: false,
+          message: 'App not found'
+        });
+      }
+      return res.json({
+        success: true,
+        data: [app] // Return as array for consistency
+      });
+    }
+
+    // Otherwise, require authentication for user's apps
+    if (!req.headers.authorization) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    // Apply auth middleware
+    const authResult = await new Promise((resolve) => {
+      const { auth } = require('../middleware/auth');
+      auth(req, res, (err) => {
+        resolve(err);
+      });
+    });
+
+    if (authResult) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication failed'
+      });
+    }
 
     const query = { owner: req.user.id };
     
