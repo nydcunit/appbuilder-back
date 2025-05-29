@@ -43,7 +43,7 @@ const elementSchema = new mongoose.Schema({
   // ADD MISSING FIELDS FOR REPEATING CONTAINERS
   contentType: {
     type: String,
-    enum: ['fixed', 'repeating'],
+    enum: ['fixed', 'repeating', 'page'],
     default: 'fixed'
   },
   repeatingConfig: {
@@ -86,6 +86,25 @@ const elementSchema = new mongoose.Schema({
       type: String,
       default: '1'
     }
+  },
+  // ADD TABS CONFIG FIELDS
+  tabsConfig: {
+    activeTab: {
+      type: String,
+      default: '1'
+    }
+  },
+  // ADD PAGE CONFIG FIELDS
+  pageConfig: {
+    selectedPageId: {
+      type: String,
+      default: null
+    },
+    parameters: [{
+      id: String,
+      name: String,
+      value: String
+    }]
   },
   children: [{
     type: mongoose.Schema.Types.Mixed // Nested elements
