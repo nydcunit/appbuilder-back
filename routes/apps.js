@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
       .sort({ updatedAt: -1 })
       .limit(limit * 1)
       .skip(skip)
-      .select('name description createdAt updatedAt isPublished views'); // Don't send screens data for list view
+      .select('name description appType subdomain createdAt updatedAt isPublished views'); // Don't send screens data for list view
 
     const total = await App.countDocuments(query);
 
@@ -236,6 +236,18 @@ router.put('/:id', [
     .trim()
     .isLength({ max: 500 })
     .withMessage('Description cannot be more than 500 characters'),
+  body('appType')
+    .optional()
+    .isIn(['web', 'mobile'])
+    .withMessage('App type must be either web or mobile'),
+  body('subdomain')
+    .optional()
+    .trim()
+    .toLowerCase()
+    .matches(/^[a-z0-9-]+$/)
+    .withMessage('Subdomain can only contain lowercase letters, numbers, and hyphens')
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Subdomain must be between 3 and 50 characters'),
   body('screens')
     .optional()
     .isArray()
@@ -252,7 +264,7 @@ router.put('/:id', [
       });
     }
 
-    const { name, description, screens, settings } = req.body;
+    const { name, description, appType, subdomain, screens, settings } = req.body;
 
     const app = await App.findOne({
       _id: req.params.id,
@@ -282,9 +294,26 @@ router.put('/:id', [
       }
     }
 
+    // Check subdomain uniqueness if being changed
+    if (subdomain && subdomain !== app.subdomain) {
+      const existingSubdomain = await App.findOne({
+        subdomain,
+        _id: { $ne: req.params.id }
+      });
+
+      if (existingSubdomain) {
+        return res.status(400).json({
+          success: false,
+          message: 'This subdomain is already taken'
+        });
+      }
+    }
+
     // Update fields
     if (name) app.name = name;
     if (description !== undefined) app.description = description;
+    if (appType) app.appType = appType;
+    if (subdomain !== undefined) app.subdomain = subdomain;
     if (screens) app.screens = screens;
     if (settings) app.settings = { ...app.settings, ...settings };
 
