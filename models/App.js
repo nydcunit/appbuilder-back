@@ -123,6 +123,11 @@ const screenSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Screen name cannot be more than 50 characters']
   },
+  url: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   elements: [elementSchema]
 }, { _id: false });
 
@@ -163,7 +168,11 @@ const appSchema = new mongoose.Schema({
   },
   screens: {
     type: [screenSchema],
-    default: [{ id: 1, name: 'Home', elements: [] }] // Default screen
+    default: [{ id: 1, name: 'Home', url: '', elements: [] }] // Default screen
+  },
+  homeScreenId: {
+    type: Number,
+    default: 1
   },
   settings: {
     theme: {

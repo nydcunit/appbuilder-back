@@ -264,7 +264,7 @@ router.put('/:id', [
       });
     }
 
-    const { name, description, appType, subdomain, screens, settings } = req.body;
+    const { name, description, appType, subdomain, screens, settings, homeScreenId } = req.body;
 
     const app = await App.findOne({
       _id: req.params.id,
@@ -316,6 +316,7 @@ router.put('/:id', [
     if (subdomain !== undefined) app.subdomain = subdomain;
     if (screens) app.screens = screens;
     if (settings) app.settings = { ...app.settings, ...settings };
+    if (homeScreenId !== undefined) app.homeScreenId = homeScreenId;
 
     // Increment version on screen/element changes
     if (screens) {
