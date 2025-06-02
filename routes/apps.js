@@ -22,6 +22,23 @@ router.get('/', async (req, res) => {
           message: 'App not found'
         });
       }
+      
+      // Debug: Check if calculations are present in the app data
+      console.log('🔍 Backend: Found app for subdomain:', subdomain);
+      if (app.screens && app.screens.length > 0) {
+        app.screens.forEach((screen, screenIndex) => {
+          console.log(`🔍 Backend: Screen ${screenIndex} (${screen.name}) has ${screen.elements?.length || 0} elements`);
+          if (screen.elements) {
+            screen.elements.forEach((element, elementIndex) => {
+              if (element.calculations && Object.keys(element.calculations).length > 0) {
+                console.log(`✅ Backend: Element ${element.id} has calculations:`, Object.keys(element.calculations));
+                console.log(`📊 Backend: Calculation data:`, element.calculations);
+              }
+            });
+          }
+        });
+      }
+      
       return res.json({
         success: true,
         data: [app] // Return as array for consistency
@@ -314,7 +331,22 @@ router.put('/:id', [
     if (description !== undefined) app.description = description;
     if (appType) app.appType = appType;
     if (subdomain !== undefined) app.subdomain = subdomain;
-    if (screens) app.screens = screens;
+    if (screens) {
+      // Debug: Check what calculations are being saved
+      console.log('💾 Backend: Saving screens with calculations...');
+      screens.forEach((screen, screenIndex) => {
+        console.log(`💾 Backend: Screen ${screenIndex} (${screen.name}) has ${screen.elements?.length || 0} elements`);
+        if (screen.elements) {
+          screen.elements.forEach((element, elementIndex) => {
+            if (element.calculations && Object.keys(element.calculations).length > 0) {
+              console.log(`💾 Backend: Element ${element.id} being saved with calculations:`, Object.keys(element.calculations));
+              console.log(`💾 Backend: Calculation data being saved:`, element.calculations);
+            }
+          });
+        }
+      });
+      app.screens = screens;
+    }
     if (settings) app.settings = { ...app.settings, ...settings };
     if (homeScreenId !== undefined) app.homeScreenId = homeScreenId;
 

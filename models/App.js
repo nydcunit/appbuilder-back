@@ -1,5 +1,99 @@
 const mongoose = require('mongoose');
 
+// Schema for calculation steps
+const calculationStepSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    default: 'operation'
+  },
+  operation: String,
+  config: {
+    source: String, // 'custom', 'element', 'database', 'repeating_container', 'passed_parameter', 'timestamp'
+    value: String,
+    elementId: String,
+    containerValueType: String,
+    databaseId: String,
+    tableId: String,
+    selectedColumn: String,
+    action: String,
+    filters: [{
+      id: String,
+      column: String,
+      operator: String,
+      value: String,
+      logic: String
+    }],
+    repeatingContainerId: String,
+    repeatingColumn: String,
+    passedParameterName: String,
+    passedParameterFromScreen: String
+  }
+}, { _id: false });
+
+// Schema for calculations
+const calculationSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  name: String,
+  description: String,
+  steps: [calculationStepSchema]
+}, { _id: false });
+
+// Schema for condition steps (similar to calculation steps)
+const conditionStepSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    default: 'operation'
+  },
+  operation: String, // 'equals', 'not_equals', 'greater_than', 'less_than', 'and', 'or', etc.
+  config: {
+    source: String,
+    value: String,
+    elementId: String,
+    containerValueType: String,
+    databaseId: String,
+    tableId: String,
+    selectedColumn: String,
+    action: String,
+    filters: [{
+      id: String,
+      column: String,
+      operator: String,
+      value: String,
+      logic: String
+    }],
+    repeatingContainerId: String,
+    repeatingColumn: String,
+    passedParameterName: String,
+    passedParameterFromScreen: String
+  }
+}, { _id: false });
+
+// Schema for conditions
+const conditionSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  name: String,
+  description: String,
+  properties: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  steps: [conditionStepSchema]
+}, { _id: false });
+
 // Schema for individual elements (containers, text, etc.)
 const elementSchema = new mongoose.Schema({
   id: {
@@ -21,25 +115,12 @@ const elementSchema = new mongoose.Schema({
     enum: ['fixed', 'conditional'],
     default: 'fixed'
   },
-  conditions: [{
-    id: String,
-    properties: {  // FIXED: Added properties field for condition-specific styling
-      type: mongoose.Schema.Types.Mixed,
-      default: {}
-    },
-    steps: [{
-      id: String,
-      type: {
-        type: String,
-        default: 'operation'
-      },
-      operation: String,
-      config: {
-        type: mongoose.Schema.Types.Mixed,
-        default: {}
-      }
-    }]
-  }],
+  conditions: [conditionSchema],
+  // NEW: Store calculations that belong to this element
+  calculations: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   // ADD MISSING FIELDS FOR REPEATING CONTAINERS
   contentType: {
     type: String,
@@ -209,6 +290,45 @@ const appSchema = new mongoose.Schema({
   views: {
     type: Number,
     default: 0
+  },
+  // NEW: Store all calculations in app data
+  calculations: {
+    type: Map,
+    of: calculationSchema,
+    default: new Map()
+  },
+  // NEW: Store global app state (tabs, sliders, etc.)
+  globalState: {
+    activeTabs: {
+      type: Map,
+      of: Number,
+      default: new Map()
+    },
+    activeSliders: {
+      type: Map,
+      of: Number,
+      default: new Map()
+    },
+    customVariables: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map()
+    }
+  },
+  // NEW: App execution settings
+  executionSettings: {
+    enableInMemoryExecution: {
+      type: Boolean,
+      default: true
+    },
+    cacheDatabase: {
+      type: Boolean,
+      default: true
+    },
+    debugMode: {
+      type: Boolean,
+      default: false
+    }
   }
 }, {
   timestamps: true
