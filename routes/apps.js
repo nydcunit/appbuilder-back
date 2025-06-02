@@ -23,18 +23,32 @@ router.get('/', async (req, res) => {
         });
       }
       
-      // Debug: Check if calculations are present in the app data
+      // Debug: Check if calculations are present in the app data (including nested children)
       console.log('🔍 Backend: Found app for subdomain:', subdomain);
+      
+      const checkCalculationsRecursively = (elements, depth = 0) => {
+        const indent = '  '.repeat(depth);
+        elements.forEach((element, elementIndex) => {
+          console.log(`${indent}🔍 Backend: Element ${element.id} (${element.type})`);
+          if (element.calculations && Object.keys(element.calculations).length > 0) {
+            console.log(`${indent}✅ Backend: Element ${element.id} has calculations:`, Object.keys(element.calculations));
+            console.log(`${indent}📊 Backend: Calculation data:`, element.calculations);
+          } else {
+            console.log(`${indent}❌ Backend: Element ${element.id} has NO calculations`);
+          }
+          
+          if (element.children && element.children.length > 0) {
+            console.log(`${indent}🔍 Backend: Checking ${element.children.length} children of ${element.id}`);
+            checkCalculationsRecursively(element.children, depth + 1);
+          }
+        });
+      };
+      
       if (app.screens && app.screens.length > 0) {
         app.screens.forEach((screen, screenIndex) => {
           console.log(`🔍 Backend: Screen ${screenIndex} (${screen.name}) has ${screen.elements?.length || 0} elements`);
           if (screen.elements) {
-            screen.elements.forEach((element, elementIndex) => {
-              if (element.calculations && Object.keys(element.calculations).length > 0) {
-                console.log(`✅ Backend: Element ${element.id} has calculations:`, Object.keys(element.calculations));
-                console.log(`📊 Backend: Calculation data:`, element.calculations);
-              }
-            });
+            checkCalculationsRecursively(screen.elements);
           }
         });
       }
@@ -332,17 +346,31 @@ router.put('/:id', [
     if (appType) app.appType = appType;
     if (subdomain !== undefined) app.subdomain = subdomain;
     if (screens) {
-      // Debug: Check what calculations are being saved
+      // Debug: Check what calculations are being saved (including nested children)
       console.log('💾 Backend: Saving screens with calculations...');
+      
+      const checkSaveCalculationsRecursively = (elements, depth = 0) => {
+        const indent = '  '.repeat(depth);
+        elements.forEach((element, elementIndex) => {
+          console.log(`${indent}💾 Backend: Saving element ${element.id} (${element.type})`);
+          if (element.calculations && Object.keys(element.calculations).length > 0) {
+            console.log(`${indent}✅ Backend: Element ${element.id} being saved WITH calculations:`, Object.keys(element.calculations));
+            console.log(`${indent}📊 Backend: Calculation data being saved:`, element.calculations);
+          } else {
+            console.log(`${indent}❌ Backend: Element ${element.id} being saved WITHOUT calculations`);
+          }
+          
+          if (element.children && element.children.length > 0) {
+            console.log(`${indent}💾 Backend: Saving ${element.children.length} children of ${element.id}`);
+            checkSaveCalculationsRecursively(element.children, depth + 1);
+          }
+        });
+      };
+      
       screens.forEach((screen, screenIndex) => {
         console.log(`💾 Backend: Screen ${screenIndex} (${screen.name}) has ${screen.elements?.length || 0} elements`);
         if (screen.elements) {
-          screen.elements.forEach((element, elementIndex) => {
-            if (element.calculations && Object.keys(element.calculations).length > 0) {
-              console.log(`💾 Backend: Element ${element.id} being saved with calculations:`, Object.keys(element.calculations));
-              console.log(`💾 Backend: Calculation data being saved:`, element.calculations);
-            }
-          });
+          checkSaveCalculationsRecursively(screen.elements);
         }
       });
       app.screens = screens;

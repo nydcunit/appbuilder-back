@@ -188,7 +188,8 @@ const elementSchema = new mongoose.Schema({
     }]
   },
   children: [{
-    type: mongoose.Schema.Types.Mixed // Nested elements
+    type: mongoose.Schema.Types.Mixed, // Nested elements with full schema support
+    default: []
   }]
 }, { _id: false }); // Don't create separate _id for sub-documents
 
